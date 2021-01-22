@@ -538,10 +538,10 @@ EOF
 # 检查ip
 checkIP() {
 	echoContent skyBlue " ---> 检查ipv4中"
-	pingIP=$(ping -c 1 -W 1000 ${domain} | sed '1{s/[^(]*(//;s/).*//;q;}')
+	pingIP=$(ping -c 1 -W 1000 ${domain} | sed '2{s/[^(]*(//;s/).*//;q;}' | sed -n '$p')
 	if [[ -z $(echo "${pingIP}" | awk -F "[.]" '{print $4}') ]]; then
 		echoContent skyBlue " ---> 检查ipv6中"
-		pingIP=$(ping6 -c 1 ${domain} | sed '1{s/[^(]*(//;s/).*//;q;}')
+		pingIP=$(ping6 -c 1 ${domain} | sed '2{s/[^(]*(//;s/).*//;q;}' | sed -n '$p')
 		pingIPv6=${pingIP}
 	fi
 
@@ -574,7 +574,8 @@ installTLS() {
 		echoContent green " ---> 检测到证书"
 		checkTLStatus "${tlsDomain}"
 		if [[ "${tlsStatus}" == "已过期" ]]; then
-			rm -rf "$HOME/.acme.sh/${tlsDomain}_ecc/*"
+			rm -rf $HOME/.acme.sh/${tlsDomain}_ecc/*
+			rm -rf /etc/v2ray-agent/tls/${tlsDomain}*
 			installTLS "$1"
 		else
 			echoContent green " ---> 证书有效"
@@ -2552,7 +2553,8 @@ removeUser() {
 # 更新脚本
 updateV2RayAgent() {
 	echoContent skyBlue "\n进度  $1/${totalProgress} : 更新v2ray-agent脚本"
-	wget -P /etc/v2ray-agent/ -N --no-check-certificate "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh" && chmod 700 /etc/v2ray-agent/install.sh && /bin/bash /etc/v2ray-agent/install.sh
+	wget -P /etc/v2ray-agent/ -N --no-check-certificate "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh" && chmod 700 /etc/v2ray-agent/install.sh
+	echoContent skyBlue " ---> 更新完毕，请手动执行[vasma]打开脚本\n"
 }
 
 # 安装BBR
@@ -2635,7 +2637,7 @@ checkLog() {
 # 脚本快捷方式
 aliasInstall() {
 
-	if [[ -f "$HOME/install.sh" ]] && [[ -d "/etc/v2ray-agent" ]] && "$HOME/install.sh" | grep -q "作者：mack-a"; then
+	if [[ -f "$HOME/install.sh" ]] && [[ -d "/etc/v2ray-agent" ]] && grep <$HOME/install.sh -q "作者：mack-a"; then
 		mv "$HOME/install.sh" /etc/v2ray-agent/install.sh
 		if [[ -d "/usr/bin/" ]] && [[ ! -f "/usr/bin/vasma" ]]; then
 			ln -s /etc/v2ray-agent/install.sh /usr/bin/vasma
@@ -3084,7 +3086,7 @@ menu() {
 	cd "$HOME" || exit
 	echoContent red "\n=============================================================="
 	echoContent green "作者：mack-a"
-	echoContent green "当前版本：v2.3.5"
+	echoContent green "当前版本：v2.3.8"
 	echoContent green "Github：https://github.com/mack-a/v2ray-agent"
 	echoContent green "描述：七合一共存脚本"
 	echoContent red "=============================================================="
